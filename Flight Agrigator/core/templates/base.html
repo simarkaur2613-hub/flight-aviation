@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Airfare CPI India &bull; National Price Intelligence Platform{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        msBlue: '#0078d4',
+                        msBlueDark: '#005a9e',
+                        msNavy: '#0a122a',
+                        msSlate: '#1e293b',
+                        msBorder: '#e2e8f0',
+                        msBg: '#f8fafc',
+                    },
+                    fontFamily: {
+                        sans: ['"Segoe UI"', '-apple-system', 'BlinkMacSystemFont', 'Roboto', '"Helvetica Neue"', 'sans-serif'],
+                        mono: ['Consolas', '"Cascadia Code"', 'Monaco', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+        .ms-fluent-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .ms-fluent-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+            border-color: #cbd5e1;
+        }
+        .ms-btn-primary {
+            background-color: #0078d4;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 4px;
+            padding: 6px 14px;
+            transition: background-color 0.15s ease;
+        }
+        .ms-btn-primary:hover {
+            background-color: #106ebe;
+        }
+        .ms-btn-secondary {
+            background-color: #ffffff;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            font-weight: 500;
+            border-radius: 4px;
+            padding: 6px 14px;
+            transition: all 0.15s ease;
+        }
+        .ms-btn-secondary:hover {
+            background-color: #f1f5f9;
+            border-color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
+
+    <!-- Enterprise Microsoft / Corporate Giant Top Command Bar -->
+    <header class="bg-[#0b1329] border-b border-slate-800 text-white sticky top-0 z-50 shadow-md">
+        <!-- Tier 1: Global Identity Bar -->
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <!-- Corporate Logo & Identity -->
+                <div class="flex items-center space-x-3">
+                    <!-- Microsoft Fluent 4-Square Inspired Icon -->
+                    <div class="grid grid-cols-2 gap-0.5 w-6 h-6 p-0.5">
+                        <div class="bg-[#f25022] rounded-[1px]"></div>
+                        <div class="bg-[#7fba00] rounded-[1px]"></div>
+                        <div class="bg-[#00a4ef] rounded-[1px]"></div>
+                        <div class="bg-[#ffb900] rounded-[1px]"></div>
+                    </div>
+                    
+                    <div class="h-5 w-[1px] bg-slate-700 mx-1"></div>
+
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-sm font-semibold tracking-tight text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-plane-departure text-[#00a4ef] text-xs"></i>
+                            Airfare Price Index India
+                        </span>
+                        <span class="hidden sm:inline-block text-[11px] bg-blue-500/20 text-blue-300 border border-blue-400/30 px-2 py-0.5 rounded font-mono font-medium">
+                            MoSPI &bull; SIH26056
+                        </span>
+                        <span class="hidden md:inline-block text-[11px] bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded font-medium">
+                            Team Polarchy
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Global Enterprise Status & Action Ribbon -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden md:flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1 rounded border border-slate-700">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-mono text-[11px]">DGCA &bull; MoSPI CPI PRODUCTION FEED</span>
+                    </div>
+
+                    <a href="{% url 'export_quotes_csv' %}" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                        <span>Export CSV</span>
+                    </a>
+
+                    <a href="/admin/" target="_blank" class="text-xs bg-[#0078d4] hover:bg-[#106ebe] text-white px-3 py-1.5 rounded font-medium shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Admin Portal</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tier 2: Microsoft Navigation Ribbon -->
+        <div class="bg-[#111c38] border-t border-slate-800/80">
+            <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex items-center space-x-1 overflow-x-auto py-1 scrollbar-none text-xs">
+                    <a href="{% url 'dashboard' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'dashboard' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-chart-line text-[11px]"></i> Executive Dashboard
+                    </a>
+                    <a href="{% url 'stress_test' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'stress_test' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-bolt text-[11px] text-amber-400"></i> Shock Stress-Testing
+                    </a>
+                    <a href="{% url 'hedonic' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'hedonic' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-brain text-[11px] text-purple-400"></i> Hedonic Model
+                    </a>
+                    <a href="{% url 'methodology' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'methodology' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-calculator text-[11px]"></i> Jevons & DGCA Weights
+                    </a>
+                    <a href="{% url 'routes' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'routes' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-route text-[11px]"></i> Yield Curves (T-0 to T-30)
+                    </a>
+                    <a href="{% url 'scraper' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'scraper' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-spider text-[11px]"></i> Ingestion Telemetry
+                    </a>
+                    <a href="{% url 'validation' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'validation' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-shield-halved text-[11px] text-emerald-400"></i> Data Quality & QA
+                    </a>
+                    <a href="{% url 'policy_report' %}" class="px-3 py-1.5 rounded font-medium transition flex items-center gap-1.5 whitespace-nowrap {% if request.resolver_match.url_name == 'policy_report' %}bg-[#0078d4] text-white font-semibold shadow-sm{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %}">
+                        <i class="fa-solid fa-file-contract text-[11px]"></i> MoSPI Policy Brief
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Enterprise Breadcrumbs -->
+    <div class="bg-white border-b border-slate-200 text-xs py-2">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-slate-500">
+            <div class="flex items-center space-x-2">
+                <span class="text-slate-400 font-medium">Government of India</span>
+                <span>/</span>
+                <span class="text-slate-600 font-medium">MoSPI National Statistical Office</span>
+                <span>/</span>
+                <span class="text-slate-600 font-medium">Consumer Price Index (CPI) Division</span>
+                <span>/</span>
+                <span class="text-[#0078d4] font-semibold">Real-Time Airfare Augmentation (AFPI)</span>
+            </div>
+            <div class="hidden sm:flex items-center gap-3 text-[11px] text-slate-400 font-mono">
+                <span>SYSTEM ID: POLARCHY-SIH26056-CORP</span>
+                <span>&bull;</span>
+                <span>LATENCY: 12ms</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Alert Messages -->
+    {% if messages %}
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {% for message in messages %}
+        <div class="p-3.5 mb-2 rounded border flex items-center justify-between {% if message.tags == 'success' %}bg-emerald-50 text-emerald-900 border-emerald-300{% elif message.tags == 'error' %}bg-rose-50 text-rose-900 border-rose-300{% else %}bg-blue-50 text-blue-900 border-blue-300{% endif %}">
+            <div class="flex items-center space-x-2 text-xs font-medium">
+                <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check text-emerald-600{% elif message.tags == 'error' %}fa-triangle-exclamation text-rose-600{% else %}fa-circle-info text-blue-600{% endif %}"></i>
+                <span>{{ message }}</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 text-xs">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Enterprise Canvas -->
+    <main class="flex-grow max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Corporate Enterprise Footer -->
+    <footer class="bg-[#0b1329] border-t border-slate-800 text-slate-400 py-6 mt-16 text-xs">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-white tracking-wide">MoSPI CPI Augmentation Intelligence Platform</span>
+                    <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700">Enterprise Edition</span>
+                </div>
+                <p class="text-[11px] text-slate-400">
+                    Developed by <strong>Team Polarchy</strong> &bull; Smart India Hackathon 2026 &bull; Problem Statement SIH26056 &bull; Ministry of Statistics & Programme Implementation
+                </p>
+            </div>
+            <div class="flex items-center space-x-4 text-[11px]">
+                <a href="{% url 'api_indices' %}" target="_blank" class="hover:text-blue-400 transition"><i class="fa-solid fa-code mr-1"></i> Index API</a>
+                <a href="{% url 'api_cpi_benchmark' %}" target="_blank" class="hover:text-blue-400 transition"><i class="fa-solid fa-database mr-1"></i> Benchmark API</a>
+                <a href="{% url 'policy_report' %}" class="hover:text-blue-400 transition"><i class="fa-solid fa-print mr-1"></i> Policy Brief</a>
+                <span class="text-slate-600">&bull;</span>
+                <span class="font-mono text-slate-500">Django 6.1 &bull; Python 3.14 &bull; Microsoft Fluent Standard</span>
+            </div>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

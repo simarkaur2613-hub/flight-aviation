@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Methodology & Formulas | Airfare Price Index India{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-2 text-xs font-semibold text-blue-600 uppercase tracking-wider">
+            <i class="fa-solid fa-graduation-cap"></i> Econometric Index Foundations
+        </div>
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-1">Index Number Theory & CPI Augmentation Methodology</h1>
+        <p class="text-sm text-slate-500 mt-1">Comparative mathematical formulation of elementary aggregates (Jevons, Dutot, Carli), multilateral indices, and DGCA weighting schemes</p>
+    </div>
+
+    <!-- Comparative Formula Chart -->
+    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+            <div>
+                <h3 class="text-lg font-bold text-slate-900">Empirical Formula Divergence (Jevons vs Carli vs Dutot vs Törnqvist)</h3>
+                <p class="text-xs text-slate-500">Visualizing the axiomatic upward drift in Carli vs Jevons on identical scraped airline microdata</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded font-medium">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> Carli Upward Bias Demonstrated
+                </span>
+            </div>
+        </div>
+        <div class="h-80 w-full">
+            <canvas id="formulaChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Axiomatic Foundations Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Jevons Card -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-blue-600">
+            <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900">Jevons Index (Geometric)</h4>
+                <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Standard (IMF/ONS)</span>
+            </div>
+            <div class="mt-3 p-3 bg-slate-50 rounded-lg text-center font-mono text-sm text-slate-800">
+                I_J = &prod; (p_i^t / p_i^0) ^ (1/N)
+            </div>
+            <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+                Computes the geometric mean of price relatives. Satisfies the <strong>time reversal test</strong> (I^{0:t} &times; I^{t:0} = 1) and transitivity. Accounts for consumer elasticity and flight departure time substitution.
+            </p>
+        </div>
+
+        <!-- Dutot Card -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-indigo-600">
+            <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900">Dutot Index (Ratio of Means)</h4>
+                <span class="text-xs bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded">Homogeneous Only</span>
+            </div>
+            <div class="mt-3 p-3 bg-slate-50 rounded-lg text-center font-mono text-sm text-slate-800">
+                I_D = (&sum; p_i^t / N) / (&sum; p_i^0 / N)
+            </div>
+            <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+                Calculates the ratio of arithmetic mean prices. Satisfies transitivity but is sensitive to ticket price levels (more expensive premium flights carry disproportionate weight).
+            </p>
+        </div>
+
+        <!-- Carli Card -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-rose-600">
+            <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-900">Carli Index (Arithmetic)</h4>
+                <span class="text-xs bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded">Biased / Discredited</span>
+            </div>
+            <div class="mt-3 p-3 bg-slate-50 rounded-lg text-center font-mono text-sm text-slate-800">
+                I_C = &sum; (p_i^t / p_i^0) / N
+            </div>
+            <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+                Calculates the arithmetic mean of price relatives. <strong>Fails the time reversal test</strong>; strictly greater than or equal to Jevons due to Jensen's inequality, generating systematic upward inflation drift in volatile scanner/scraped data.
+            </p>
+        </div>
+    </div>
+
+    <!-- Stratification & DGCA Weights Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Lead Horizon Weights (1 Column) -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <h3 class="font-bold text-slate-900 text-base mb-1">Lead-Time Horizon Weights (w_L)</h3>
+            <p class="text-xs text-slate-500 mb-4">Empirical booking distribution based on consumer purchase profiles</p>
+
+            <div class="space-y-3">
+                {% for code, stratum in lead_weights.items %}
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200/60">
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-800">
+                        <span>{{ stratum.label }}</span>
+                        <span class="text-blue-600 font-bold font-mono">{% widthratio stratum.weight 1 100 %}%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2">
+                        <div class="bg-blue-600 h-1.5 rounded-full" style="width: {% widthratio stratum.weight 1 100 %}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- DGCA Route Passenger Table (2 Columns) -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+            <h3 class="font-bold text-slate-900 text-base mb-1">DGCA City-Pair Domestic Basket Weights (W_r)</h3>
+            <p class="text-xs text-slate-500 mb-4">Directorate General of Civil Aviation passenger traffic weighting matrix</p>
+
+            <div class="overflow-x-auto max-h-72">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 text-slate-600 uppercase font-semibold sticky top-0">
+                        <tr>
+                            <th class="py-2.5 px-3">Route</th>
+                            <th class="py-2.5 px-3">City Pair</th>
+                            <th class="py-2.5 px-3 text-right">Distance</th>
+                            <th class="py-2.5 px-3 text-right">Annual Passengers</th>
+                            <th class="py-2.5 px-3 text-right">CPI Weight (W_r)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for r in routes %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="py-2 px-3 font-mono font-bold text-blue-600">{{ r.route_code }}</td>
+                            <td class="py-2 px-3 text-slate-700">{{ r.origin.city_name }} &rarr; {{ r.destination.city_name }}</td>
+                            <td class="py-2 px-3 text-right text-slate-600">{{ r.distance_km }} km</td>
+                            <td class="py-2 px-3 text-right font-medium text-slate-800">{{ r.dgca_annual_pax|stringformat:"d" }}</td>
+                            <td class="py-2 px-3 text-right font-mono font-bold text-slate-900">{{ r.dgca_weight|floatformat:4 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const formulaData = {{ formula_data_json|safe }};
+    const fLabels = formulaData.map(d => d.date);
+    const jevonsSeries = formulaData.map(d => d.jevons);
+    const dutotSeries = formulaData.map(d => d.dutot);
+    const carliSeries = formulaData.map(d => d.carli);
+    const tornqvistSeries = formulaData.map(d => d.tornqvist);
+
+    const ctxFormula = document.getElementById('formulaChart').getContext('2d');
+    new Chart(ctxFormula, {
+        type: 'line',
+        data: {
+            labels: fLabels,
+            datasets: [
+                {
+                    label: 'Jevons (Geometric Mean - Recommended)',
+                    data: jevonsSeries,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'transparent',
+                    borderWidth: 3,
+                    tension: 0.2
+                },
+                {
+                    label: 'Carli (Arithmetic Mean - Demonstrates Upward Bias)',
+                    data: carliSeries,
+                    borderColor: '#ef4444',
+                    borderDash: [4, 4],
+                    borderWidth: 2,
+                    tension: 0.2
+                },
+                {
+                    label: 'Dutot (Ratio of Arithmetic Means)',
+                    data: dutotSeries,
+                    borderColor: '#6366f1',
+                    borderWidth: 1.5,
+                    tension: 0.2
+                },
+                {
+                    label: 'Törnqvist (Multilateral Log-Mean)',
+                    data: tornqvistSeries,
+                    borderColor: '#10b981',
+                    borderWidth: 2,
+                    tension: 0.2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    title: { display: true, text: 'Index (Base 100)' },
+                    suggestedMin: 95
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

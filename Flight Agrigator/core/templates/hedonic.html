@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Hedonic Quality-Adjustment Studio | Airfare CPI India{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-300">
+                    <i class="fa-solid fa-brain mr-1 text-purple-600"></i> Hedonic Quality Adjustment Model
+                </span>
+                <span class="text-xs text-slate-500 font-mono">IMF &bull; Eurostat &bull; ONS Standard</span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">Econometric Quality-Adjusted Pure Price Index</h1>
+            <p class="text-xs text-slate-500">Decomposing airline ticket prices into shadow values for flight characteristics (Peak hours, Lead time, LCC vs FSC)</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded font-mono font-medium border border-slate-200">
+                OLS R&sup2; = {{ reg_result.r_squared }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Summary KPI Tiles -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-purple-600">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Model Goodness of Fit (R&sup2;)</span>
+            <div class="mt-2 text-3xl font-black text-slate-900 font-mono">{{ reg_result.r_squared }}</div>
+            <p class="text-[11px] text-slate-400 mt-1">Explains {{ reg_result.r_squared|stringformat:".2%" }} of fare variance</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-[#0078d4]">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sample Size (Microdata)</span>
+            <div class="mt-2 text-3xl font-black text-slate-900 font-mono">{{ reg_result.sample_size }}</div>
+            <p class="text-[11px] text-slate-400 mt-1">Cross-sectional atomic observations</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-indigo-600">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Quality-Adjusted Mean Fare</span>
+            <div class="mt-2 text-3xl font-black text-slate-900 font-mono">₹{{ reg_result.quality_adjusted_mean_fare|floatformat:0 }}</div>
+            <p class="text-[11px] text-slate-400 mt-1">Standardized representative ticket</p>
+        </div>
+
+        <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-emerald-600">
+            <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Quality Bias Adjustment</span>
+            <div class="mt-2 text-3xl font-black text-emerald-600 font-mono">{{ reg_result.quality_adjustment_gap_pct }}%</div>
+            <p class="text-[11px] text-slate-400 mt-1">Difference from raw average</p>
+        </div>
+    </div>
+
+    <!-- Econometric Model Formulation Card -->
+    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+        <h3 class="text-sm font-bold text-slate-900 mb-1">Hedonic Price Equation Specification</h3>
+        <p class="text-xs text-slate-500 mb-3">Double-logarithmic ordinary least squares formulation</p>
+
+        <div class="p-4 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto leading-relaxed">
+            ln(Fare_i) = &beta;_0 + &beta;_1 &bull; ln(Distance_i) + &beta;_2 &bull; Peak_Hour_i + &beta;_3 &bull; (Lead_Days_i / 30) + &beta;_4 &bull; LCC_Model_i + &epsilon;_i
+        </div>
+    </div>
+
+    <!-- OLS Parameter Estimates Table -->
+    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h3 class="text-sm font-bold text-slate-900">Estimated Implicit Shadow Prices & Regression Parameters</h3>
+                <p class="text-xs text-slate-500">Decomposition of fare drivers used to isolate pure inflation</p>
+            </div>
+            <span class="text-xs text-slate-500 font-mono">F-Statistic: {{ reg_result.f_statistic }}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs font-sans">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-semibold">
+                    <tr>
+                        <th class="py-2.5 px-3">Quality Attribute / Regressor</th>
+                        <th class="py-2.5 px-3">Description</th>
+                        <th class="py-2.5 px-3 text-right">Coefficient (&beta;)</th>
+                        <th class="py-2.5 px-3 text-right">Std Error</th>
+                        <th class="py-2.5 px-3 text-right">t-Statistic</th>
+                        <th class="py-2.5 px-3 text-right">Price Impact</th>
+                        <th class="py-2.5 px-3 text-center">Significance</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-mono">
+                    {% for row in reg_result.regression_table %}
+                    <tr class="hover:bg-slate-50">
+                        <td class="py-3 px-3 font-sans font-bold text-slate-900">{{ row.variable }}</td>
+                        <td class="py-3 px-3 font-sans text-slate-500">{{ row.description }}</td>
+                        <td class="py-3 px-3 text-right font-bold {% if row.coefficient >= 0 %}text-[#0078d4]{% else %}text-rose-600{% endif %}">
+                            {{ row.coefficient }}
+                        </td>
+                        <td class="py-3 px-3 text-right text-slate-500">{{ row.std_error }}</td>
+                        <td class="py-3 px-3 text-right text-slate-700 font-bold">{{ row.t_statistic }}</td>
+                        <td class="py-3 px-3 text-right font-bold {% if row.pct_impact >= 0 %}text-emerald-700{% else %}text-rose-700{% endif %}">
+                            {% if row.pct_impact >= 0 %}+{% endif %}{{ row.pct_impact }}%
+                        </td>
+                        <td class="py-3 px-3 text-center font-sans">
+                            {% if row.is_significant %}
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">p &lt; 0.01 ***</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">Not Stat Sig</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

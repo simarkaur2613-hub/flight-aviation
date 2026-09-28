@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block title %}Macroeconomic Stress-Testing Studio | Airfare CPI India{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Enterprise Command Bar Header -->
+    <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                    <i class="fa-solid fa-bolt mr-1 text-amber-600"></i> Corporate Stress-Testing Engine
+                </span>
+                <span class="text-xs text-slate-500 font-mono">Macroeconomic Shock Pass-Through Model</span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">Aviation Fuel & Capacity Crunch Shock Simulator</h1>
+            <p class="text-xs text-slate-500">Simulate Jet Fuel (ATF) price surges and fleet supply contractions to project transmission into MoSPI Headline CPI</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button onclick="resetSliders()" class="ms-btn-secondary text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+            </button>
+            <a href="{% url 'policy_report' %}" class="ms-btn-primary text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-file-export"></i> Policy Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Workspace: Left Controls + Right Real-Time Projections -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Controls: Microsoft Form Style (4 Columns) -->
+        <div class="lg:col-span-4 space-y-4">
+            <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm space-y-5">
+                <div class="border-b border-slate-200 pb-3">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-[#0078d4]"></i> Shock Parameter Controls
+                    </h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Adjust macroeconomic inputs to model shock transmission</p>
+                </div>
+
+                <!-- Input 1: Jet Fuel (ATF) Shock -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-700">
+                        <label for="atfSlider" class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-gas-pump text-amber-600"></i> Aviation Turbine Fuel (ATF) Shock:
+                        </label>
+                        <span id="atfVal" class="font-mono text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded">+15.0%</span>
+                    </div>
+                    <input type="range" id="atfSlider" min="0" max="60" step="1" value="15" class="w-full accent-[#0078d4] cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                        <span>0% (Baseline)</span>
+                        <span>+30% (Severe)</span>
+                        <span>+60% (Crisis)</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Fuel represents ~42% of Indian airline OPEX with ~72% spot pass-through elasticity.</p>
+                </div>
+
+                <!-- Input 2: Capacity Crunch (Fleet Grounding) -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-700">
+                        <label for="capSlider" class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-plane-slash text-rose-600"></i> Fleet Grounding / Capacity Crunch:
+                        </label>
+                        <span id="capVal" class="font-mono text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 px-2 py-0.5 rounded">-5.0%</span>
+                    </div>
+                    <input type="range" id="capSlider" min="0" max="25" step="1" value="5" class="w-full accent-rose-600 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                        <span>0% (Normal)</span>
+                        <span>-10% (Supply Squeeze)</span>
+                        <span>-25% (Heavy Grounding)</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Price elasticity of ~1.35x on Metro-to-Metro slot-constrained corridors (DEL-BOM).</p>
+                </div>
+
+                <!-- Input 3: Festive Seasonal Surge -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-700">
+                        <label for="festSlider" class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-calendar-star text-purple-600"></i> Festive Demand Rush (Diwali/Chhath):
+                        </label>
+                        <span id="festVal" class="font-mono text-xs font-bold bg-purple-50 text-purple-800 border border-purple-200 px-2 py-0.5 rounded">+0.0%</span>
+                    </div>
+                    <input type="range" id="festSlider" min="0" max="30" step="1" value="0" class="w-full accent-purple-600 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                        <span>0% (Normal Month)</span>
+                        <span>+15% (Holidays)</span>
+                        <span>+30% (Peak Festival)</span>
+                    </div>
+                </div>
+
+                <!-- Status indicator -->
+                <div class="p-3 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Model Engine
+                    </span>
+                    <span class="font-mono text-[11px] text-slate-500">OLS Elasticity Transferred</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Projections: Corporate KPI Tiles & Charts (8 Columns) -->
+        <div class="lg:col-span-8 space-y-5">
+            <!-- 4 Corporate Enterprise KPI Tiles -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-[#0078d4]">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Shocked AFPI</span>
+                    <div class="mt-2 text-2xl font-black text-slate-900" id="cardAfpiVal">{{ sim_result.airfare_index.shocked|floatformat:2 }}</div>
+                    <div class="mt-1 flex items-center text-xs font-bold text-rose-600" id="cardAfpiChange">
+                        +{{ sim_result.airfare_index.change_pct }}%
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-indigo-600">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Avg Domestic Fare</span>
+                    <div class="mt-2 text-2xl font-black text-slate-900" id="cardFareVal">₹{{ sim_result.airfare_index.shocked_avg_fare|floatformat:0 }}</div>
+                    <div class="mt-1 text-xs text-slate-500 font-medium" id="cardFareDiff">
+                        +₹{{ sim_result.airfare_index.fare_difference_inr|floatformat:0 }} surcharge
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-amber-500">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Transport CPI Delta</span>
+                    <div class="mt-2 text-2xl font-black text-slate-900" id="cardTransDelta">+{{ sim_result.cpi_transmission.delta_transport_pts }} pts</div>
+                    <div class="mt-1 text-xs text-amber-700 font-medium" id="cardTransCpi">
+                        CPI: {{ sim_result.cpi_transmission.shocked_transport_cpi }}
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-emerald-600">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Headline CPI Delta</span>
+                    <div class="mt-2 text-2xl font-black text-slate-900" id="cardHeadDelta">+{{ sim_result.cpi_transmission.delta_headline_pts }} pts</div>
+                    <div class="mt-1 text-xs text-emerald-700 font-medium" id="cardHeadCpi">
+                        CPI: {{ sim_result.cpi_transmission.shocked_headline_cpi }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart: Shock Transmission Comparison -->
+            <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Aviation Shock Pass-Through: Baseline vs Shocked Scenario</h3>
+                        <p class="text-[11px] text-slate-500">Real-time simulation of index transmission across Civil Aviation & MoSPI CPI baskets</p>
+                    </div>
+                    <span class="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-medium">
+                        MoSPI CPI Base 2012=100
+                    </span>
+                </div>
+                <div class="h-64 w-full">
+                    <canvas id="stressChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Carrier Vulnerability & Fare Surcharge Breakdown -->
+            <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-slate-900">Carrier Vulnerability & Estimated Ticket Surcharge</h3>
+                    <span class="text-[11px] text-slate-500 font-mono">LCC vs Full-Service Margin Differential</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs" id="carrierTable">
+                        <thead class="bg-slate-50 text-slate-600 uppercase font-semibold">
+                            <tr>
+                                <th class="py-2 px-3">Airline</th>
+                                <th class="py-2 px-3 text-right">DGCA Market Share</th>
+                                <th class="py-2 px-3 text-right">Shocked Average Fare</th>
+                                <th class="py-2 px-3 text-right">Estimated Surcharge</th>
+                                <th class="py-2 px-3">Shock Vulnerability</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="carrierTbody">
+                            {% for c in sim_result.carrier_impacts %}
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-2.5 px-3 font-semibold text-slate-800 flex items-center gap-1.5">
+                                    <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] flex items-center justify-center font-bold">{{ c.code }}</span>
+                                    <span>{{ c.name }}</span>
+                                </td>
+                                <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">{{ c.share }}%</td>
+                                <td class="py-2.5 px-3 text-right font-bold text-slate-900">₹{{ c.shocked_fare|floatformat:0 }}</td>
+                                <td class="py-2.5 px-3 text-right font-mono font-bold text-rose-600">+{{ c.fare_surge_pct }}%</td>
+                                <td class="py-2.5 px-3">
+                                    {% if c.risk_rating == 'HIGH VULNERABILITY' %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">High LCC Exposure</span>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Moderate FSC Buffer</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initial data payload from backend
+    const initialSim = {{ sim_result_json|safe }};
+
+    // Chart.js initialization
+    const ctxStress = document.getElementById('stressChart').getContext('2d');
+    const stressChart = new Chart(ctxStress, {
+        type: 'bar',
+        data: {
+            labels: ['Airfare Index (Base 100)', 'Avg Fare (₹ / 50)', 'Transport CPI (2012=100)', 'Headline CPI (2012=100)'],
+            datasets: [
+                {
+                    label: 'Baseline (Current)',
+                    data: [
+                        initialSim.airfare_index.baseline,
+                        initialSim.airfare_index.baseline_avg_fare / 50,
+                        initialSim.cpi_transmission.baseline_transport_cpi,
+                        initialSim.cpi_transmission.baseline_headline_cpi
+                    ],
+                    backgroundColor: '#94a3b8',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Shocked Scenario Projection',
+                    data: [
+                        initialSim.airfare_index.shocked,
+                        initialSim.airfare_index.shocked_avg_fare / 50,
+                        initialSim.cpi_transmission.shocked_transport_cpi,
+                        initialSim.cpi_transmission.shocked_headline_cpi
+                    ],
+                    backgroundColor: '#0078d4',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { suggestedMin: 80 }
+            }
+        }
+    });
+
+    // Sliders
+    const atfSlider = document.getElementById('atfSlider');
+    const capSlider = document.getElementById('capSlider');
+    const festSlider = document.getElementById('festSlider');
+    const atfVal = document.getElementById('atfVal');
+    const capVal = document.getElementById('capVal');
+    const festVal = document.getElementById('festVal');
+
+    function triggerSimulation() {
+        const atf = atfSlider.value;
+        const cap = capSlider.value;
+        const fest = festSlider.value;
+
+        atfVal.innerText = `+${atf}%`;
+        capVal.innerText = `-${cap}%`;
+        festVal.innerText = `+${fest}%`;
+
+        fetch(`/api/stress-test/?atf=${atf}&capacity=${cap}&festive=${fest}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update KPI cards
+                    document.getElementById('cardAfpiVal').innerText = data.airfare_index.shocked.toFixed(2);
+                    document.getElementById('cardAfpiChange').innerText = `+${data.airfare_index.change_pct}%`;
+                    document.getElementById('cardFareVal').innerText = `₹${Math.round(data.airfare_index.shocked_avg_fare).toLocaleString()}`;
+                    document.getElementById('cardFareDiff').innerText = `+₹${Math.round(data.airfare_index.fare_difference_inr).toLocaleString()} surcharge`;
+                    document.getElementById('cardTransDelta').innerText = `+${data.cpi_transmission.delta_transport_pts} pts`;
+                    document.getElementById('cardTransCpi').innerText = `CPI: ${data.cpi_transmission.shocked_transport_cpi}`;
+                    document.getElementById('cardHeadDelta').innerText = `+${data.cpi_transmission.delta_headline_pts} pts`;
+                    document.getElementById('cardHeadCpi').innerText = `CPI: ${data.cpi_transmission.shocked_headline_cpi}`;
+
+                    // Update Chart
+                    stressChart.data.datasets[1].data = [
+                        data.airfare_index.shocked,
+                        data.airfare_index.shocked_avg_fare / 50,
+                        data.cpi_transmission.shocked_transport_cpi,
+                        data.cpi_transmission.shocked_headline_cpi
+                    ];
+                    stressChart.update();
+
+                    // Update Carrier Table
+                    const tbody = document.getElementById('carrierTbody');
+                    let html = '';
+                    data.carrier_impacts.forEach(c => {
+                        const badge = c.risk_rating === 'HIGH VULNERABILITY'
+                            ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">High LCC Exposure</span>'
+                            : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Moderate FSC Buffer</span>';
+
+                        html += `<tr class="hover:bg-slate-50">
+                            <td class="py-2.5 px-3 font-semibold text-slate-800 flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] flex items-center justify-center font-bold">${c.code}</span>
+                                <span>${c.name}</span>
+                            </td>
+                            <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">${c.share}%</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-slate-900">₹${Math.round(c.shocked_fare).toLocaleString()}</td>
+                            <td class="py-2.5 px-3 text-right font-mono font-bold text-rose-600">+${c.fare_surge_pct}%</td>
+                            <td class="py-2.5 px-3">${badge}</td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = html;
+                }
+            })
+            .catch(err => console.error("Stress test error:", err));
+    }
+
+    atfSlider.addEventListener('input', triggerSimulation);
+    capSlider.addEventListener('input', triggerSimulation);
+    festSlider.addEventListener('input', triggerSimulation);
+
+    function resetSliders() {
+        atfSlider.value = 15;
+        capSlider.value = 5;
+        festSlider.value = 0;
+        triggerSimulation();
+    }
+</script>
+{% endblock %}

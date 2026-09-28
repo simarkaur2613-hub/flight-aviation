@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Real-time Airfare Price Index India{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Executive Title and Controller Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Pipeline Live
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                    <i class="fa-solid fa-trophy mr-1 text-blue-600"></i> Smart India Hackathon 2026 &bull; SIH26056
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                    <i class="fa-solid fa-users mr-1 text-amber-700"></i> Team Polarchy
+                </span>
+                <span class="text-xs text-slate-500">Base Period: {{ latest_index.base_period }}</span>
+            </div>
+            <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Real-Time Indian Airfare Price Index (AFPI)</h1>
+            <p class="text-sm text-slate-500">Ministry of Statistics and Programme Implementation (MoSPI) &bull; Augmenting Consumer Price Index (CPI)</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{% url 'stress_test' %}" class="ms-btn-secondary text-xs flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt text-amber-500"></i> Shock Simulator
+            </a>
+            <form action="{% url 'recalculate_indices' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="ms-btn-secondary text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate text-blue-600"></i> Recompute Index
+                </button>
+            </form>
+            <form action="{% url 'trigger_scrape' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="ms-btn-primary text-xs flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-play"></i> Run Live Scrape
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top KPI Metric Cards (Microsoft Fluent Style) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Airfare Price Index -->
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-[#0078d4]">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Airfare Price Index (Jevons)</span>
+                <span class="w-7 h-7 rounded bg-blue-50 text-[#0078d4] flex items-center justify-center text-xs"><i class="fa-solid fa-gauge-high"></i></span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-3xl font-black text-slate-900 font-mono">{{ latest_index.index_value|default:"100.0"|floatformat:2 }}</span>
+                <span class="text-xs font-bold {% if latest_index.mom_inflation_pct >= 0 %}text-emerald-700 bg-emerald-50 border border-emerald-200/60{% else %}text-rose-700 bg-rose-50 border border-rose-200/60{% endif %} px-2 py-0.5 rounded">
+                    {% if latest_index.mom_inflation_pct >= 0 %}&#9650; +{% else %}&#9660; {% endif %}{{ latest_index.mom_inflation_pct|default:"0.0"|floatformat:1 }}% MoM
+                </span>
+            </div>
+            <p class="mt-2 text-[11px] text-slate-400">DGCA domestic route passenger weighted</p>
+        </div>
+
+        <!-- Card 2: Average Domestic Fare -->
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-indigo-600">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Representative Market Fare</span>
+                <span class="w-7 h-7 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-3xl font-black text-slate-900 font-mono">₹{{ latest_index.avg_fare_inr|default:"5800"|floatformat:0 }}</span>
+                <span class="text-xs text-slate-500 font-medium">Economy Direct</span>
+            </div>
+            <p class="mt-2 text-[11px] text-slate-400">Sample of {{ latest_index.sample_size|default:"0" }} flight observations</p>
+        </div>
+
+        <!-- Card 3: Augmented CPI Transport -->
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-amber-500">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Augmented Transport CPI</span>
+                <span class="w-7 h-7 rounded bg-amber-50 text-amber-600 flex items-center justify-center text-xs"><i class="fa-solid fa-bus"></i></span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-3xl font-black text-slate-900 font-mono">{{ latest_benchmark.augmented_cpi_transport|default:"179.5"|floatformat:2 }}</span>
+                <span class="text-xs font-medium text-slate-500">Official {{ latest_benchmark.mospi_cpi_transport|default:"178.6"|floatformat:2 }}</span>
+            </div>
+            <div class="mt-2 flex items-center gap-1.5 text-xs text-amber-700 font-semibold">
+                <i class="fa-solid fa-circle-exclamation text-[11px]"></i>
+                <span>{{ latest_benchmark.inflation_gap_pct|default:"0.9" }}% measurement divergence</span>
+            </div>
+        </div>
+
+        <!-- Card 4: Microdata Coverage -->
+        <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm border-t-2 border-t-emerald-600">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Total Sample Ingestion</span>
+                <span class="w-7 h-7 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs"><i class="fa-solid fa-database"></i></span>
+            </div>
+            <div class="mt-3 flex items-baseline gap-2">
+                <span class="text-3xl font-black text-slate-900 font-mono">{{ total_quotes|default:"0" }}</span>
+                <span class="text-xs text-slate-500">Quotes</span>
+            </div>
+            <p class="mt-2 text-[11px] text-slate-400">Harvested across {{ active_routes }} major domestic routes</p>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Time Series & Advance Booking Stratification -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Airfare Price Index History (2 Columns) -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Airfare Price Index Time Series (Jevons Formula)</h3>
+                    <p class="text-xs text-slate-500">Tracking aggregate domestic airfare inflation trajectory (Base = 100)</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                        <i class="fa-solid fa-check mr-1"></i> Geometric Mean
+                    </span>
+                </div>
+            </div>
+            <div class="h-72 w-full">
+                <canvas id="airfareIndexChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Advance Booking Horizon Stratification (1 Column) -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+            <div class="mb-4">
+                <h3 class="text-base font-bold text-slate-900">Lead-Time Horizon Index</h3>
+                <p class="text-xs text-slate-500">Urgent same-day vs 30-day advance booking</p>
+            </div>
+            <div class="h-72 w-full">
+                <canvas id="leadStratumChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: CPI Augmentation & Airline Market Comparison -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- CPI Comparison Chart (2 Columns) -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">CPI Augmentation: Official MoSPI Transport vs Real-Time Scraped</h3>
+                    <p class="text-xs text-slate-500">Demonstrating how automated scraping captures high-frequency dynamic pricing shocks</p>
+                </div>
+                <div class="text-xs font-semibold px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded">
+                    Air Weight: 3.2% of Transport
+                </div>
+            </div>
+            <!-- Interactive CPI Augmentation Simulator Slider -->
+            <div class="mb-4 p-3 bg-slate-50 border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders text-blue-600"></i> Airfare Subgroup Weight:
+                    </span>
+                    <input type="range" id="weightSlider" min="0.5" max="10.0" step="0.1" value="3.2" class="w-36 md:w-48 accent-blue-600 cursor-pointer">
+                    <span id="weightDisplay" class="font-mono font-bold text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">3.2%</span>
+                </div>
+                <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+                    <span id="gapIndicator" class="font-semibold text-amber-700">Divergence: Live Policy Simulation Active</span>
+                </div>
+            </div>
+
+            <div class="h-72 w-full">
+                <canvas id="cpiAugmentChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Carrier Average Fare & Market Share Table (1 Column) -->
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+                <div class="mb-4">
+                    <h3 class="text-base font-bold text-slate-900">Domestic Airline Fares</h3>
+                    <p class="text-xs text-slate-500">DGCA Market Share vs Sample Average</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-500 uppercase font-semibold">
+                            <tr>
+                                <th class="py-2 px-3">Carrier</th>
+                                <th class="py-2 px-3 text-right">DGCA Share</th>
+                                <th class="py-2 px-3 text-right">Avg Fare</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for al in airline_stats %}
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-2.5 px-3 font-medium text-slate-800 flex items-center gap-1.5">
+                                    <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] flex items-center justify-center font-bold">{{ al.code }}</span>
+                                    <span>{{ al.name }}</span>
+                                    {% if not al.is_lcc %}
+                                    <span class="text-[9px] bg-purple-50 text-purple-700 border border-purple-200 px-1 rounded">FSC</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-2.5 px-3 text-right text-slate-600 font-semibold">{{ al.share }}%</td>
+                                <td class="py-2.5 px-3 text-right font-bold text-slate-900">₹{{ al.avg_fare|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="py-4 text-center text-slate-400">No airline stats available</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-100 text-xs text-slate-500">
+                <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i>
+                IndiGo accounts for >60% of domestic capacity, heavily driving aggregate CPI fluctuations.
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. Airfare Price Index Time Series Chart
+    const timeSeriesData = {{ time_series_json|safe }};
+    const tsLabels = timeSeriesData.map(d => d.date);
+    const tsValues = timeSeriesData.map(d => d.jevons);
+    const tsMom = timeSeriesData.map(d => d.mom);
+
+    const ctxIndex = document.getElementById('airfareIndexChart').getContext('2d');
+    new Chart(ctxIndex, {
+        type: 'line',
+        data: {
+            labels: tsLabels,
+            datasets: [
+                {
+                    label: 'Airfare Price Index (Base=100)',
+                    data: tsValues,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.3,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'MoM Inflation Rate (%)',
+                    data: tsMom,
+                    type: 'bar',
+                    backgroundColor: 'rgba(245, 158, 11, 0.6)',
+                    borderColor: '#f59e0b',
+                    borderWidth: 1,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: { display: true, text: 'Index (Base 100)' },
+                    suggestedMin: 95,
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: { display: true, text: 'MoM %' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+
+    // 2. Lead-Time Stratum Radar / Bar Chart
+    const strataData = {{ strata_series_json|safe }};
+    const strataKeys = Object.keys(strataData);
+    const strataLabels = strataKeys.map(k => strataData[k].label.split('(')[0].trim());
+    const latestStrataValues = strataKeys.map(k => {
+        const arr = strataData[k].data;
+        return arr.length > 0 ? arr[arr.length - 1].val : 100.0;
+    });
+
+    const ctxStratum = document.getElementById('leadStratumChart').getContext('2d');
+    new Chart(ctxStratum, {
+        type: 'bar',
+        data: {
+            labels: strataLabels,
+            datasets: [{
+                label: 'Horizon Index Value',
+                data: latestStrataValues,
+                backgroundColor: [
+                    '#ef4444',
+                    '#f59e0b',
+                    '#3b82f6',
+                    '#10b981'
+                ],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    suggestedMin: 80,
+                    title: { display: true, text: 'Index Value' }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // 3. CPI Augmentation Comparison Chart
+    const cpiData = {{ cpi_chart_json|safe }};
+    const cpiMonths = cpiData.map(d => d.month);
+    const mospiTransport = cpiData.map(d => d.mospi_transport);
+    const augTransport = cpiData.map(d => d.augmented_transport);
+
+    const ctxCpi = document.getElementById('cpiAugmentChart').getContext('2d');
+    const chartCpi = new Chart(ctxCpi, {
+        type: 'line',
+        data: {
+            labels: cpiMonths,
+            datasets: [
+                {
+                    label: 'Official MoSPI Transport CPI',
+                    data: mospiTransport,
+                    borderColor: '#64748b',
+                    borderDash: [5, 5],
+                    borderWidth: 2,
+                    tension: 0.2
+                },
+                {
+                    label: 'Augmented Transport CPI (Scraped Airfare)',
+                    data: augTransport,
+                    borderColor: '#0284c7',
+                    backgroundColor: 'rgba(2, 132, 199, 0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    title: { display: true, text: 'CPI Sub-Index (Base 2012=100)' },
+                    suggestedMin: 165
+                }
+            }
+        }
+    });
+
+    // Interactive Sensitivity Slider Event Listener (Polarchy SIH Step 05 & 06)
+    const weightSlider = document.getElementById('weightSlider');
+    const weightDisplay = document.getElementById('weightDisplay');
+    const gapIndicator = document.getElementById('gapIndicator');
+
+    weightSlider.addEventListener('input', function() {
+        const val = parseFloat(this.value);
+        weightDisplay.innerText = val.toFixed(1) + '%';
+        
+        const decimalWeight = (val / 100).toFixed(4);
+        fetch(`/api/cpi-simulate/?weight=${decimalWeight}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success' && data.data) {
+                    const newSimulated = data.data.map(d => d.simulated_augmented);
+                    chartCpi.data.datasets[1].data = newSimulated;
+                    chartCpi.data.datasets[1].label = `Augmented Transport CPI (w=${val.toFixed(1)}%)`;
+                    chartCpi.update();
+                    
+                    const latestGap = data.data[data.data.length - 1].inflation_divergence_pts;
+                    gapIndicator.innerHTML = `Inflation Gap: <strong class="text-amber-800">${latestGap >= 0 ? '+' : ''}${latestGap} pts</strong>`;
+                }
+            })
+            .catch(err => console.error("Error updating CPI simulation:", err));
+    });
+</script>
+{% endblock %}
